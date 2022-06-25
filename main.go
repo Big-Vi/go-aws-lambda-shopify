@@ -1,17 +1,18 @@
 package main
 
-import(
+import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"github.com/rapito/go-shopify/shopify"
-    "os"
-	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go-v2/service/sns"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"context"
+	"os"
 	"strings"
+
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/rapito/go-shopify/shopify"
 )
 
 type SNSPublishAPI interface {
@@ -57,30 +58,31 @@ func HandleRequest() {
 			}
 		}
 	}
-	
-	snsMessage := strings.Join(skuToStock, ",")
-	topicARN := "<lambda-arn>"
 
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	
-	if err != nil {
-		panic("configuration error, " + err.Error())
+	if len(skuToStock) > 0 {
+		snsMessage := strings.Join(skuToStock, ",")
+		topicARN := "<lambda-arn>"
+
+		cfg, err := config.LoadDefaultConfig(context.TODO())
+
+		if err != nil {
+			panic("configuration error, " + err.Error())
+		}
+
+		client := sns.NewFromConfig(cfg)
+		input := &sns.PublishInput{
+			Message:  &snsMessage,
+			TopicArn: &topicARN,
+		}
+
+		result, err := PublishMessage(context.TODO(), client, input)
+		if err != nil {
+			fmt.Println("Got an error publishing the message:")
+			fmt.Println(err)
+		}
+
+		fmt.Println("Message ID: " + *result.MessageId)
 	}
-
-	client := sns.NewFromConfig(cfg)
-	input := &sns.PublishInput{
-		Message:  &snsMessage,
-		TopicArn: &topicARN,
-	}
-
-	result, err := PublishMessage(context.TODO(), client, input)
-	if err != nil {
-		fmt.Println("Got an error publishing the message:")
-		fmt.Println(err)
-		panic(err)
-	}
-
-	fmt.Println("Message ID: " + *result.MessageId)
 }
 
 func main() {

@@ -4,8 +4,7 @@
     {
       "Effect": "Allow",
       "Action": "sns:Publish",
-      "Resource": "<sns-arn>"
+      "Resource": "arn:aws:sns:ap-southeast-2:090426658505:shopify-stock-notification"
     }
   ]
 }
-

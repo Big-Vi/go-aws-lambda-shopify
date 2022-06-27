@@ -5,7 +5,12 @@
 *.so
 *.dylib
 *.zip
-.env
+*.env
+*.o
+
+**/*
+!**/*.go
+!**/
 
 # Test binary, built with `go test -c`
 *.test

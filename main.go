@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
-	"github.com/rapito/go-shopify/shopify"
 )
 
 type SNSPublishAPI interface {
@@ -28,11 +29,22 @@ func HandleRequest() {
 	password := os.Getenv("SHOPIPY_API_PASSWORD")
 	domain := os.Getenv("SHOPIFY_SHOPIFY_DOMAIN")
 
-	shop := shopify.New(domain, apiKey, password)
-	shopData, _ := shop.Get("products")
+	url := fmt.Sprintf("https://%s:%s@%s.myshopify.com/admin/api/2022-04/products.json", apiKey, password, domain)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		panic(err)
+	}
+
+	defer resp.Body.Close()
+
+	bytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
 
 	var products map[string]interface{}
-	if err := json.NewDecoder(strings.NewReader(string(shopData))).Decode(&products); err != nil {
+	if err := json.NewDecoder(strings.NewReader(string(bytes))).Decode(&products); err != nil {
 		panic(err)
 	}
 

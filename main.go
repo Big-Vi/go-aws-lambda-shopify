@@ -33,12 +33,8 @@ func HandleRequest() {
 	shop := shopify.New(domain, apiKey, password)
 	shopData, _ := shop.Get("products")
 
-	req := struct {
-		Body io.Reader
-	}{bytes.NewReader(shopData)}
-
 	var products map[string]interface{}
-	if err := json.NewDecoder(req.Body).Decode(&products); err != nil {
+	if err := json.NewDecoder(strings.NewReader(string(shopData))).Decode(&products); err != nil {
 		panic(err)
 	}
 
